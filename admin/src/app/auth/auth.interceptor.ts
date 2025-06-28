@@ -1,17 +1,70 @@
-import { HttpInterceptorFn } from '@angular/common/http';
+import { HttpInterceptorFn, HttpErrorResponse, HttpRequest } from '@angular/common/http';
+import { AuthService } from './auth.service';
+import { inject } from '@angular/core';
+import { catchError, switchMap, throwError } from 'rxjs';
+import { Router } from '@angular/router';
+import { SnackbarService } from '../services/snackbar.service';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  // const token = localStorage.getItem('access_token'); // adjust key if needed
-  const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsInVzZXJFbWFpbCI6ImRhc2NoYXlhbjg4MzdAZ21haWwuY29tIiwiaWF0IjoxNzUxMDQzNTk2LCJleHAiOjE3NTExMjk5OTZ9.yiLDpIaYl3rIVDTRBfu-2Z4aIFtr8DHGZh4d8D7-Bqw'; // or sessionStorage
-// testing 
-  if (token) {
-    const authReq = req.clone({
-      setHeaders: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return next(authReq);
-  }
+  const authService = inject(AuthService);
+  const router = inject(Router);
+  const token = authService.getToken();
+  const snackbarService=inject(SnackbarService)
 
-  return next(req);
+  // Clone request with token if available
+  const authReq = token
+    ? req.clone({
+        setHeaders: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+    : req;
+
+  return next(authReq).pipe(
+    catchError((error: HttpErrorResponse) => {
+      const isUnauthorized = error.status === 401;
+      const tokenExpired =
+        error?.error?.message === 'Invalid or expired token';
+
+      const isRefreshRequest = req.url.includes('/refresh-token');
+
+      // 🔁 Attempt to refresh token if access token expired
+      if (
+        isUnauthorized &&
+        tokenExpired &&
+        !req.url.includes('/login') &&
+        !isRefreshRequest
+      ) {
+        const refreshToken = authService.getrefreshToken();
+        if (!refreshToken) return throwError(() => error);
+
+        return authService.refreshToken().pipe(
+          switchMap(() => {
+            const newToken = authService.getToken();
+            const retryReq: HttpRequest<any> = req.clone({
+              setHeaders: {
+                Authorization: `Bearer ${newToken}`,
+              },
+            });
+            return next(retryReq);
+          }),
+          catchError((err) => {
+            authService.logout();
+            router.navigate(['/login']);
+            return throwError(() => err);
+          })
+        );
+      }
+
+      //  If refresh token itself is expired
+      if (isUnauthorized && isRefreshRequest && tokenExpired) {
+
+        authService.logout();
+        router.navigate(['/login']);
+        snackbarService.showInfo("session expired,Login Again")
+      }
+
+      return throwError(() => error);
+    })
+  );
 };
