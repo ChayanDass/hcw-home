@@ -14,12 +14,12 @@ import { CommonModule } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../auth/auth.service';
 import { environment } from '../../environments/environment';
 import { LoginUser } from '../models/user.model';
 import { SnackbarService } from '../services/snackbar/snackbar.service';
+import { AccessDeniedComponent } from '../components/access-denied/access-denied.component';
 
 export class MyErrorStateMatcher implements ErrorStateMatcher {
   isErrorState(control: FormControl | null, form: NgForm | FormGroupDirective | null): boolean {
@@ -43,6 +43,7 @@ export class MyErrorStateMatcher implements ErrorStateMatcher {
     MatInputModule,
     MatButtonModule,
     MatProgressSpinnerModule,
+    AccessDeniedComponent
 
   ],
 })
@@ -52,6 +53,7 @@ export class LoginComponent implements OnInit {
   private router = inject(Router);
   private authService = inject(AuthService);
   private snackBarService=inject(SnackbarService)
+  errorMessage:string = '';
 
 
   loginForm = new FormGroup({
@@ -78,6 +80,7 @@ export class LoginComponent implements OnInit {
     const accessToken = queryParams['aT'];
     const refreshToken = queryParams['rT'];
     this.returnUrl = queryParams['returnUrl'] || '/dashboard';
+    const error = queryParams['error'];
     console.log(accessToken,refreshToken);
     
   
@@ -94,6 +97,8 @@ export class LoginComponent implements OnInit {
         }
       });
       return;
+    } else if (error){
+      this.errorMessage=error
     }
   
     if (this.authService.getCurrentUser()) {

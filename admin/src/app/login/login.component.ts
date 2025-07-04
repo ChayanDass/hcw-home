@@ -20,6 +20,8 @@ import { AuthService } from '../auth/auth.service';
 import { environment } from '../../environments/environment';
 import { LoginUser } from '../models/user.model';
 import { SnackbarService } from '../services/snackbar.service';
+import { AccessDeniedComponent } from '../shared/components/access-denied/access-denied.component';
+
 export class MyErrorStateMatcher implements ErrorStateMatcher {
   isErrorState(control: FormControl | null, form: NgForm | FormGroupDirective | null): boolean {
     const isSubmitted = form?.submitted;
@@ -42,6 +44,7 @@ export class MyErrorStateMatcher implements ErrorStateMatcher {
     MatInputModule,
     MatButtonModule,
     MatProgressSpinnerModule,
+    AccessDeniedComponent
 
   ],
 })
@@ -51,6 +54,7 @@ export class LoginComponent implements OnInit {
   private router = inject(Router);
   private authService = inject(AuthService);
   private snackBarService=inject(SnackbarService)
+  errorMessage=''
 
 
   loginForm = new FormGroup({
@@ -76,7 +80,7 @@ export class LoginComponent implements OnInit {
     const accessToken = queryParams['aT'];
     const refreshToken = queryParams['rT'];
     this.returnUrl = queryParams['returnUrl'] || '/dashboard';
-  
+    const error = queryParams['error'];
     if (accessToken && refreshToken) {
       this.authService.login(accessToken,refreshToken).subscribe({
         next: (user) => {
@@ -90,6 +94,8 @@ export class LoginComponent implements OnInit {
         }
       });
       return;
+    } else if (error){
+      this.errorMessage=error      
     }
   
     if (this.authService.getCurrentUser()) {
