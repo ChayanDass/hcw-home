@@ -14,13 +14,12 @@ import { CommonModule } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../auth/auth.service';
 import { environment } from '../../environments/environment';
 import { LoginUser } from '../models/user.model';
-import { SnackbarService } from '../services/snackbar.service';
-import { AccessDeniedComponent } from '../shared/components/access-denied/access-denied.component';
+import { SnackbarService } from '../services/snackbar/snackbar.service';
+import { AccessDeniedComponent } from '../components/access-denied/access-denied.component';
 
 export class MyErrorStateMatcher implements ErrorStateMatcher {
   isErrorState(control: FormControl | null, form: NgForm | FormGroupDirective | null): boolean {
@@ -54,7 +53,7 @@ export class LoginComponent implements OnInit {
   private router = inject(Router);
   private authService = inject(AuthService);
   private snackBarService=inject(SnackbarService)
-  errorMessage=''
+  errorMessage:string = '';
 
 
   loginForm = new FormGroup({
@@ -73,14 +72,18 @@ export class LoginComponent implements OnInit {
   returnUrl: string = '';
   showPasswordLogin = signal(true);
   showOpenIdLogin = signal(true);
-  openIdLoginUrl:string=`${environment.apiUrl}/v1/auth/openid/login?role=admin`
+  openIdLoginUrl:string=`${environment.apiUrl}/v1/auth/openid/login?role=practitioner`
 
   ngOnInit() {
     const queryParams = this.route.snapshot.queryParams;
+
     const accessToken = queryParams['aT'];
     const refreshToken = queryParams['rT'];
     this.returnUrl = queryParams['returnUrl'] || '/dashboard';
     const error = queryParams['error'];
+    console.log(accessToken,refreshToken);
+    
+  
     if (accessToken && refreshToken) {
       this.authService.login(accessToken,refreshToken).subscribe({
         next: (user) => {
@@ -95,7 +98,7 @@ export class LoginComponent implements OnInit {
       });
       return;
     } else if (error){
-      this.errorMessage=error      
+      this.errorMessage=error
     }
   
     if (this.authService.getCurrentUser()) {
