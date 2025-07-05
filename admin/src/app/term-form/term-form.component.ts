@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Observable, Subscription, forkJoin, take } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
 
@@ -11,7 +11,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
-import { MdEditorComponent } from './rich-text-editor.module';
 import { OrganizationService } from '../services/organization.service';
 import { SnackbarService } from '../services/snackbar.service';
 import { Country, Language, Organization } from '../models/user.model';
@@ -21,6 +20,7 @@ import { AngularSvgIconModule } from 'angular-svg-icon';
 import { ConfigService } from '../services/config.service';
 import { LanguageService } from '../services/language.service';
 import { RoutePaths } from '../constants/route-path.enum';
+import { RichTextEditorComponent } from '../rich-text-editor/rich-text-editor.component';
 
 @Component({
   selector: 'app-term-form',
@@ -34,8 +34,8 @@ import { RoutePaths } from '../constants/route-path.enum';
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    MdEditorComponent,
-    AngularSvgIconModule
+    AngularSvgIconModule,
+    RichTextEditorComponent
   ],
   templateUrl: './term-form.component.html',
   styleUrl: './term-form.component.scss'
@@ -49,6 +49,8 @@ export class TermFormComponent implements OnInit, OnDestroy {
   languages: Language[] = [];
   countries: Country[] = [];
   private subscriptions = new Subscription();
+  private initialFormValue: any;
+
 
   constructor(
     private route: ActivatedRoute,
@@ -66,14 +68,17 @@ export class TermFormComponent implements OnInit, OnDestroy {
     this.parseRouteParams();
     this.loadInitialData();
   }
-
   private initializeForm(): void {
     this.termForm = this.fb.group({
-      organisationId: ['', Validators.required],
-      language: ['', Validators.required],
-      country: ['', Validators.required],
-      content: ['', Validators.required],
+      organisationId: new FormControl<string>('', Validators.required),
+      language: new FormControl<string>('', Validators.required),
+      country: new FormControl<string>('', Validators.required),
+      content: new FormControl<string>('', Validators.required),
     });
+  }
+  
+  get contentRichControl() {
+    return this.termForm.get('content') as FormControl<string>;
   }
 
   private parseRouteParams(): void {
@@ -129,6 +134,11 @@ export class TermFormComponent implements OnInit, OnDestroy {
       country: term.country,
       content: term.content
     });
+    this.initialFormValue = this.termForm.getRawValue();
+  }
+  get isFormChanged(): boolean {
+    const currentValue = this.termForm.getRawValue();
+    return JSON.stringify(currentValue) !== JSON.stringify(this.initialFormValue);
   }
 
   private updateQueryParamsFromForm(): void {
@@ -157,13 +167,17 @@ export class TermFormComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const payload = {
-      organizationId: this.termForm.get('organisationId')?.value,
+    let payload: any = {
       language: this.termForm.get('language')?.value,
       country: this.termForm.get('country')?.value,
-      content: this.termForm.get('content')?.value
+      content: this.termForm.get('content')?.value,
     };
-
+    if (!this.isEditMode) {
+      payload.organizationId = this.termForm.get('organisationId')?.value;
+    }
+    
+    console.log(payload);
+    
     this.loading = true;
     const operation = this.isEditMode && this.termId
       ? this.termService.update(payload.organizationId, this.termId, payload)
@@ -176,7 +190,9 @@ export class TermFormComponent implements OnInit, OnDestroy {
           this.router.navigate([RoutePaths.Terms]);
         },
         error: (error) => {
-          this.snackBarService.showError(`Failed: ${error.message || 'Unknown error'}`);
+          this.snackBarService.showError(`${error.error.message || 'Unknown error'}`);
+          console.log(error);
+          
           this.loading = false;
         }
       })
