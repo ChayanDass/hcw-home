@@ -93,6 +93,10 @@ export interface ApiResponse<T> {
 
 export interface LoginUser {
   id: number;
+  termId: number;
+  acceptedAt: string | Date;
+  termVersion: number;
+
   role: UserRole;
   firstName: string;
   lastName: string;
@@ -104,6 +108,7 @@ export interface LoginUser {
   status: UserStatus;
   createdAt: string | Date;
   updatedAt: string | Date;
-  accessToken :string;
-  refreshToken:string
+
+  accessToken: string;
+  refreshToken: string;
 }

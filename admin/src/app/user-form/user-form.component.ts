@@ -220,6 +220,7 @@ export class UserFormComponent implements OnInit, OnDestroy {
         error: (error: any) => {
           console.error(`Error ${this.isEditMode ? 'updating' : 'creating'} user:`, error);
           this.snackBarService.showError(`Failed: ${error?.message || 'Unknown error'}`);
+          console.log(error);
           this.loading = false;
         }
       })

@@ -142,14 +142,15 @@ export class AuthController {
     const redirectTo = redirectMap[ReqRole];
   
     try {
-      passport.authenticate(strategy, async (err, user, info) => {
+      passport.authenticate(strategy, async (err, data, info) => {
         if (res.headersSent) return;
   
         if (err) {
           this.logger.error(`OIDC error: ${err.message || err}`);
           return res.redirect(`${redirectTo}/login?error=${encodeURIComponent(err.message || 'OIDCError')}`);
         }
-        const { accessToken, refreshToken } = user.tokens;
+        const { user, tokens } = data.data;        
+        const { accessToken, refreshToken } = tokens;
         const finalRedirect = `${redirectTo}/login?aT=${accessToken}&rT=${refreshToken}`;
         this.logger.log(`Redirecting to ${finalRedirect}`);
         return res.redirect(finalRedirect);

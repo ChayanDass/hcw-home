@@ -1,10 +1,11 @@
 import { Injectable, computed, signal } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
-import { map } from "rxjs/operators";
+import { catchError, map, switchMap, } from "rxjs/operators";
 
 import { Router } from "@angular/router";
 import { environment } from "../../environments/environment";
 import { LoginUser } from "../models/user.model";
+import { of } from "rxjs";
 
 @Injectable({ providedIn: "root" })
 export class AuthService {
@@ -32,7 +33,8 @@ export class AuthService {
   }
 
 
-  login(accessToken: string, refreshToken:string) {
+
+  login(accessToken: string, refreshToken: string) {
     console.log('[AuthService] Fetching profile from /me');
   
     const headers = {
@@ -40,20 +42,41 @@ export class AuthService {
     };
   
     return this.http.get<any>(`${this.baseurl}/me`, { headers }).pipe(
-      map(res => {
+      switchMap(res => {
         console.log('[AuthService] getprofile response:', res);
-        if (res.data) {
-          const fullUser: LoginUser = {
-            ...res.data,
-            accessToken: accessToken,
-            refreshToken:refreshToken
-          };
-          this.storeCurrentUser(fullUser);
-        }
-        return res.data;
+  
+        const user = res.data;
+        if (!user) throw new Error('Invalid user response from /me');
+  
+        return this.http.get<any>(`${environment.apiUrl}/v1/practitioner/${user.id}`).pipe(
+          map(practitionerRes => {
+            const practitioner = practitionerRes.data.practitioner;
+            const fullUser: LoginUser = {
+              ...practitioner,
+              accessToken,
+              refreshToken
+            };
+            this.storeCurrentUser(fullUser);
+            return fullUser;
+          }),
+          catchError(err => {
+            console.warn('[AuthService] Practitioner not found, falling back to basic user', err);
+            const fullUser: LoginUser = {
+              ...user,
+              accessToken,
+              refreshToken,
+              termId: 0,
+              termVersion: 0,
+              acceptedAt: null
+            };
+            this.storeCurrentUser(fullUser);
+            return of(fullUser);
+          })
+        );
       })
     );
   }
+  
   loginLocal(email: string, password: string) {
     console.log('[AuthService] Attempting loginLocal with:', { email });
     return this.http

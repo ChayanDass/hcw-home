@@ -10,7 +10,8 @@ import { ConsultationHistoryComponent } from './consultation-history/consultatio
 import { ProfileComponent } from './pages/profile/profile.component';
 import { LoginComponent } from './login/login.component';
 import { AuthGuard } from './auth/guard/auth.guard';
-
+import { AcceptTermComponent } from './components/accept-term/accept-term.component';
+import { termGuard } from './shared/guards/terms-accept.guard';
 export const routes: Routes = [
   {
     path: '',
@@ -19,7 +20,7 @@ export const routes: Routes = [
   },
   {
     path: '',
-    canActivate: [AuthGuard],
+    canActivate: [AuthGuard,termGuard],
     children: [
       {
         path: RoutePaths.Dashboard,
@@ -56,5 +57,10 @@ export const routes: Routes = [
     path: RoutePaths.Login,
     component: LoginComponent,
   },
+  {
+    path: RoutePaths.AcceptTerms,
+    component:AcceptTermComponent,
+    canActivate:[AuthGuard]
+  }
 ];
 

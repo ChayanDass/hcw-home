@@ -1,0 +1,33 @@
+<div class="terms-full-page">
+  <h1 class="service-title">Service Agreement</h1>
+
+  <!-- Terms Preview Box -->
+  <div class="terms-box">
+    <h2>Terms and Conditions</h2>
+    <p>Please read these terms and conditions carefully before using our service.</p>
+
+    <div class="terms-scroll-box">
+      <markdown [data]="markdownContent"></markdown>
+    </div>
+  </div>
+
+
+
+
+  <div class="accept-box">
+
+  <!-- Acknowledgement Box -->
+  <div class="agreement-box">
+    <mat-checkbox [(ngModel)]="isAgreed">
+      I have read and agree to the Terms and Conditions outlined above. I understand that by checking this box and clicking <strong>"Accept Terms"</strong>, I am entering into a legally binding agreement.
+    </mat-checkbox>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="actions">
+    <button mat-raised-button color="primary" [disabled]="!isAgreed" (click)="onAccept()">
+      Accept Terms
+    </button>
+  </div>
+</div>
+</div>

@@ -20,6 +20,9 @@ import { environment } from '../../environments/environment';
 import { LoginUser } from '../models/user.model';
 import { SnackbarService } from '../services/snackbar/snackbar.service';
 import { AccessDeniedComponent } from '../components/access-denied/access-denied.component';
+import { TermService } from '../services/term.service';
+import { RoutePaths } from '../constants/route-paths.enum';
+
 
 export class MyErrorStateMatcher implements ErrorStateMatcher {
   isErrorState(control: FormControl | null, form: NgForm | FormGroupDirective | null): boolean {
@@ -53,6 +56,7 @@ export class LoginComponent implements OnInit {
   private router = inject(Router);
   private authService = inject(AuthService);
   private snackBarService=inject(SnackbarService)
+  private termService = inject(TermService);
   errorMessage:string = '';
 
 
@@ -73,39 +77,68 @@ export class LoginComponent implements OnInit {
   showPasswordLogin = signal(true);
   showOpenIdLogin = signal(true);
   openIdLoginUrl:string=`${environment.apiUrl}/v1/auth/openid/login?role=practitioner`
-
   ngOnInit() {
     const queryParams = this.route.snapshot.queryParams;
-
+  
     const accessToken = queryParams['aT'];
     const refreshToken = queryParams['rT'];
     this.returnUrl = queryParams['returnUrl'] || '/dashboard';
     const error = queryParams['error'];
-    console.log(accessToken,refreshToken);
-    
   
     if (accessToken && refreshToken) {
-      this.authService.login(accessToken,refreshToken).subscribe({
+      this.authService.login(accessToken, refreshToken).subscribe({
         next: (user) => {
           if (user) {
-            this.snackBarService.showSuccess('Logged In Successfull')
-            this.router.navigateByUrl(this.returnUrl);
+            this.snackBarService.showSuccess('Logged In Successfully');
+  
+            // ➤ Check latest terms
+            this.termService.getLatestTerms({}).subscribe({
+              next: (latest) => {
+                console.log('[Login] Latest Terms:', latest);
+  
+                const needsAccept =
+                  latest?.id &&
+                  (user.termVersion === undefined || 
+                   latest.version > user.termVersion || 
+                   latest.id > (user.termId || 0));
+  
+                if (needsAccept) {
+                  this.router.navigate([RoutePaths.AcceptTerms], {
+                    queryParams: {
+                      termId: latest.id
+                    }
+                  });
+                } else {
+                  this.router.navigateByUrl(this.returnUrl);
+                }
+              },
+              error: (err) => {
+                console.error('[Login] Failed to fetch latest terms', err);
+                this.router.navigateByUrl(this.returnUrl);
+              }
+            });
           }
         },
         error: (err) => {
-          console.error('[Login] Error fetching profile:', err);
+          console.error('[Login] Error:', err);
+          this.errorMessage = err?.message || 'Login failed';
         }
       });
       return;
-    } else if (error){
-      this.errorMessage=error
     }
   
-    if (this.authService.getCurrentUser()) {
+    // Already logged in
+    const user = this.authService.getCurrentUser();
+    if (user) {
       this.router.navigateByUrl(this.returnUrl);
       return;
     }
+  
+    if (error) {
+      this.errorMessage = error;
+    }
   }
+  
   
 
   loginLocal() {
@@ -142,5 +175,9 @@ export class LoginComponent implements OnInit {
     window.location.href = this.openIdLoginUrl;
     this.loading.set(true)
   }
+
+
+
+
 
 }

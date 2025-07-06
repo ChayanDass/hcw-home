@@ -4,7 +4,8 @@ import { SidebarComponent } from './shared/components/sidebar/sidebar.component'
 import { CommonModule } from '@angular/common';
 import { AngularSvgIconModule, SvgIconRegistryService } from 'angular-svg-icon';
 import { AuthService } from './auth/auth.service';
-import { MatProgressSpinner, MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import {  MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { TermService } from './services/term.service';
 
 
 @Component({
@@ -31,7 +32,8 @@ export class AppComponent implements OnInit {
 
   constructor(
     private iconRegistry: SvgIconRegistryService,
-    private authService:AuthService
+    private authService:AuthService,
+    private termService: TermService
 
   ) {}
 
@@ -52,27 +54,13 @@ export class AppComponent implements OnInit {
       }
     });
   }
+  hasAcceptedLatestTerms(): boolean {
+    const user = this.authService.getCurrentUser();
+    const latest = this.termService.getLatestStored(); 
+  
+    return !!user && !!latest && user.termVersion >= latest.version && user.termId >= latest.id;
+  }
+  
 }
 
 
-
-// import { Component, computed, inject } from '@angular/core';
-// import { RouterOutlet } from '@angular/router';
-// import { SidebarComponent } from './shared/components/sidebar/sidebar.component';
-// import { AuthService } from './auth/auth.service';
-// import { MatProgressSpinner, MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-// import { CommonModule } from '@angular/common';
-
-
-// @Component({
-//   selector: 'app-root',
-//   imports: [RouterOutlet, SidebarComponent,MatProgressSpinnerModule,CommonModule],
-//   templateUrl: './app.component.html',
-//   styleUrl: './app.component.scss',
-// })
-// export class AppComponent {
-//   title = 'admin';
-//   private authService = inject(AuthService);
-//   loginChecked = computed(() => this.authService.loginChecked());
-//   isLoggedIn = computed(() => this.authService.isLoggedIn());
-// }

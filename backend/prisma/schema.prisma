@@ -36,6 +36,7 @@ model User {
   Message            Message[]
   languages          UserLanguage[]
   specialities       UserSpeciality[]
+  practitioner       Practitioner? // Optional relation to Practitioner model
 
   @@map("users")
   Consultation Consultation[]
@@ -303,9 +304,21 @@ model Terms {
   // Relation to Organization
   organization  Organization @relation(fields: [organizationId], references: [id])
   organizationId Int
+  practitioners   Practitioner[]
 
 
   @@map("terms")
+}
+model Practitioner {
+  id           Int      @id
+  termId      Int      
+  acceptedAt   DateTime @default(now())
+  termVersion Float    @default(0.00)
+
+  user         User     @relation(fields: [id], references: [id])
+  terms        Terms    @relation(fields: [termId], references: [id])
+
+  @@map("practitioners")
 }
 
 model DeletedConsultationLog {
