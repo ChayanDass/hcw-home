@@ -86,14 +86,12 @@ export class TermService {
       console.warn('[TermService] No current user found while updating term data');
       return;
     }
-  
     const updatedUser: LoginUser = {
       ...currentUser,
       termId,
       termVersion,
       acceptedAt
     };
-  
     this.authService.storeCurrentUser(updatedUser);
   }
   
@@ -101,7 +99,8 @@ export class TermService {
   
 
   
-
+  
+  
 
   storeLatestTerm(term: Term) {
     console.log('[TermService] Saving term to localStorage:', term);
