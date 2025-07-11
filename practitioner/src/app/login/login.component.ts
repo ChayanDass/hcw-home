@@ -20,8 +20,11 @@ import { environment } from '../../environments/environment';
 import { LoginUser } from '../models/user.model';
 import { SnackbarService } from '../services/snackbar/snackbar.service';
 import { AccessDeniedComponent } from '../components/access-denied/access-denied.component';
+<<<<<<< HEAD
 import { AngularSvgIconModule } from 'angular-svg-icon';
 import { ButtonComponent } from '../components/ui/button/button.component';
+=======
+>>>>>>> 506ddd8 (add practitioner login page  and access denied page)
 
 export class MyErrorStateMatcher implements ErrorStateMatcher {
   isErrorState(control: FormControl | null, form: NgForm | FormGroupDirective | null): boolean {
@@ -45,9 +48,13 @@ export class MyErrorStateMatcher implements ErrorStateMatcher {
     MatInputModule,
     MatButtonModule,
     MatProgressSpinnerModule,
+<<<<<<< HEAD
     AccessDeniedComponent,
     AngularSvgIconModule,
     ButtonComponent
+=======
+    AccessDeniedComponent
+>>>>>>> 506ddd8 (add practitioner login page  and access denied page)
 
   ],
 })

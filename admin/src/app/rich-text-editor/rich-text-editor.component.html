@@ -1,0 +1,7 @@
+<quill-editor
+  [formControl]="htmlControl"
+  [modules]="quillConfiguration"
+  [styles]="{ height: '300px', width: '100%' }"
+  (onContentChanged)="onContentChanged($event)"
+  placeholder="Type here..."
+></quill-editor>

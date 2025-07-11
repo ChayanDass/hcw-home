@@ -1,0 +1,17 @@
+// p {
+//     font-family: Lato;
+//   }
+
+  ::ng-deep quill-editor {
+    display: block !important;
+    width: 100% !important;
+  }
+  
+  ::ng-deep .ql-container {
+    width: 100% !important;
+  }
+  
+  ::ng-deep .ql-editor {
+    width: 100% !important;
+  }
+  
