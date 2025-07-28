@@ -10,6 +10,8 @@ import { AngularSvgIconModule } from 'angular-svg-icon';
 import { AuthService } from '../../auth/auth.service';
 import { SnackbarService } from '../../services/snackbar/snackbar.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { ButtonComponent } from '../ui/button/button.component';
+ButtonComponent
 
 @Component({
   selector: 'app-forget-password',
@@ -26,7 +28,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     MatIconModule,
     RouterModule,
     AngularSvgIconModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    ButtonComponent
   ],
 })
 export class ForgotPasswordComponent {
@@ -101,8 +104,9 @@ export class ForgotPasswordComponent {
             this.router.navigate(['/login']);
         },
         error: (err) => {
+          this.error=err?.error.message ;
           this.loading.set(false);
-          this.snackbarService.showError(err?.message || 'Failed to reset password');
+          this.snackbarService.showError('Failed to reset password');
         },
       });
     }
